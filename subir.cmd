@@ -5,3 +5,4 @@ git commit -m "first commit"
 git branch -M main
 git remote add origin git@github.com:alison2521190431002-star/tudao.git
 git push -u origin main
+start "" https://github.com:alison2521190431002-star/tudao
