@@ -2,7 +2,6 @@
 
 namespace App\DAO;
 
-use App\Model\Pessoa;
 use App\Config\Conexao;
 use PDO;
 
@@ -12,33 +11,18 @@ class PessoaDAO
 
     public function __construct()
     {
-        $conexao = new Conexao();
-        $this->conexao = $conexao->conectar();
-    }
-
-    public function inserir(Pessoa $pessoa): bool
-    {
-        $sql = "INSERT INTO pessoas
-                (nome, telefone, cpf, endereco)
-                VALUES
-                (:nome, :telefone, :cpf, :endereco)";
-
-        $stmt = $this->conexao->prepare($sql);
-
-        $stmt->bindValue(':nome', $pessoa->getNome());
-        $stmt->bindValue(':telefone', $pessoa->getTelefone());
-        $stmt->bindValue(':cpf', $pessoa->getCpf());
-        $stmt->bindValue(':endereco', $pessoa->getEndereco());
-
-        return $stmt->execute();
+        $this->conexao = Conexao::conectar();
     }
 
     public function listar(): array
     {
-        $sql = "SELECT * FROM pessoas";
+        $sql = "
+            SELECT *
+            FROM pessoas
+            ORDER BY nome
+        ";
 
         $stmt = $this->conexao->prepare($sql);
-
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -46,11 +30,19 @@ class PessoaDAO
 
     public function buscarPorId(int $id): ?array
     {
-        $sql = "SELECT * FROM pessoas WHERE id = :id";
+        $sql = "
+            SELECT *
+            FROM pessoas
+            WHERE id = :id
+        ";
 
         $stmt = $this->conexao->prepare($sql);
 
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(
+            ':id',
+            $id,
+            PDO::PARAM_INT
+        );
 
         $stmt->execute();
 
@@ -59,34 +51,86 @@ class PessoaDAO
         return $pessoa ?: null;
     }
 
-    public function atualizar(Pessoa $pessoa): bool
+    public function buscarPorNome(string $nome): ?array
     {
-        $sql = "UPDATE pessoas SET
-                nome = :nome,
-                telefone = :telefone,
-                cpf = :cpf,
-                endereco = :endereco
-            WHERE id = :id";
+        $sql = "
+            SELECT *
+            FROM pessoas
+            WHERE nome = :nome
+            LIMIT 1
+        ";
 
         $stmt = $this->conexao->prepare($sql);
 
-        $stmt->bindValue(':nome', $pessoa->getNome());
-        $stmt->bindValue(':telefone', $pessoa->getTelefone());
-        $stmt->bindValue(':cpf', $pessoa->getCpf());
-        $stmt->bindValue(':endereco', $pessoa->getEndereco());
-        $stmt->bindValue(':id', $pessoa->getId(), PDO::PARAM_INT);
+        $stmt->bindValue(
+            ':nome',
+            $nome
+        );
 
-        return $stmt->execute();
+        $stmt->execute();
+
+        $pessoa = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $pessoa ?: null;
     }
 
-    public function excluir(int $id): bool
-    {
-        $sql = "DELETE FROM pessoas WHERE id = :id";
+    public function pesquisarPaginado(
+        string $nome,
+        int $pagina,
+        int $porPagina = 5
+    ): array {
+
+        $offset = ($pagina - 1) * $porPagina;
+
+        $sql = "
+            SELECT *
+            FROM pessoas
+            WHERE nome LIKE :nome
+            ORDER BY nome
+            LIMIT :limite OFFSET :offset
+        ";
 
         $stmt = $this->conexao->prepare($sql);
 
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->bindValue(
+            ':nome',
+            '%' . $nome . '%'
+        );
 
-        return $stmt->execute();
+        $stmt->bindValue(
+            ':limite',
+            $porPagina,
+            PDO::PARAM_INT
+        );
+
+        $stmt->bindValue(
+            ':offset',
+            $offset,
+            PDO::PARAM_INT
+        );
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function contarPesquisa(string $nome): int
+    {
+        $sql = "
+            SELECT COUNT(*)
+            FROM pessoas
+            WHERE nome LIKE :nome
+        ";
+
+        $stmt = $this->conexao->prepare($sql);
+
+        $stmt->bindValue(
+            ':nome',
+            '%' . $nome . '%'
+        );
+
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
     }
 }

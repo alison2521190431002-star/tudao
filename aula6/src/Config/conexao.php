@@ -19,6 +19,7 @@ class Conexao
             $senha = '';
 
             try {
+
                 self::$conexao = new PDO(
                     "mysql:host={$host};dbname={$banco};charset=utf8mb4",
                     $usuario,
@@ -36,6 +37,7 @@ class Conexao
                 );
 
             } catch (PDOException $e) {
+
                 die("Erro ao conectar ao banco: " . $e->getMessage());
             }
         }
