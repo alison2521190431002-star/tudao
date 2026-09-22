@@ -132,14 +132,8 @@
                             </li>
 
 
-                            <li>
-                                <a
-                                    class="dropdown-item"
-                                    href="/Movimentacao-transferir.php"
-                                >
-                                    Transferir
-                                </a>
-                            </li>
+                        
+                                
 
                         </ul>
 
